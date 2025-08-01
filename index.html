@@ -374,7 +374,7 @@
                     </div>
                     
                     <div class="api-key-input">
-                        <input type="text" id="api-key" placeholder="Your DeepAI API Key">
+                        <input type="text" id="api-key" placeholder="Your DeepAI API Key" value="41624a1f-d629-46ba-bf83-c01a9b754334">
                     </div>
                     
                     <button id="generate-btn" class="generate-btn">Generate Image</button>
@@ -456,6 +456,9 @@
             const savedApiKey = localStorage.getItem('deepai_api_key');
             if (savedApiKey) {
                 apiKeyInput.value = savedApiKey;
+            } else {
+                // Use the provided API key if none is saved
+                apiKeyInput.value = "41624a1f-d629-46ba-bf83-c01a9b754334";
             }
             
             // Check for generation history
@@ -510,6 +513,11 @@
                         },
                         body: formData
                     });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.output || errorData.error || 'Failed to generate image');
+                    }
                     
                     const data = await response.json();
                     
