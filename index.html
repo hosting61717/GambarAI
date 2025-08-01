@@ -3,108 +3,121 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Image Generator</title>
+  <title>Generator Gambar AI - DeepAI</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
+      background-color: #f4f4f4;
+      color: #333;
       padding: 20px;
-      text-align: center;
     }
 
     h1 {
-      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #444;
     }
 
-    textarea {
-      width: 80%;
-      height: 100px;
-      margin-bottom: 10px;
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
 
     button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin-top: 10px;
+      padding: 10px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
+      font-weight: bold;
     }
 
-    #result {
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .result {
       margin-top: 20px;
+      text-align: center;
     }
 
-    img {
+    .result img {
       max-width: 100%;
       border-radius: 10px;
       margin-top: 10px;
+      border: 2px solid #ddd;
+    }
+
+    .loading {
+      color: #007bff;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>AI Gambar Generator (Tanpa Backend)</h1>
-  <textarea id="prompt" placeholder="Masukkan prompt seperti 'anime girl in city at night'..."></textarea><br>
-  <button onclick="generateImage()">Buat Gambar</button>
+  <h1>Generator Gambar AI</h1>
+  <form id="imageForm">
+    <input type="text" id="prompt" placeholder="Masukkan deskripsi gambar..." required />
+    <button type="submit">Buat Gambar</button>
+  </form>
 
-  <div id="result"></div>
+  <div class="result" id="result"></div>
 
   <script>
-    function generateImage() {
-      const prompt = document.getElementById("prompt").value;
-      const resultDiv = document.getElementById("result");
-      resultDiv.innerHTML = "Tunggu sebentar, sedang menghasilkan gambar...";
+    const form = document.getElementById('imageForm');
+    const result = document.getElementById('result');
 
-      const headers = new Headers();
-      headers.append("Content-Type", "application/json");
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const prompt = document.getElementById('prompt').value.trim();
+      if (!prompt) return;
 
-      const body = JSON.stringify({
-        key: "41624a1f-d629-46ba-bf83-c01a9b754334",
-        model_id: "midjourney",
-        prompt: prompt,
-        negative_prompt: "blurry, bad anatomy, distorted, extra limbs",
-        width: "512",
-        height: "512",
-        samples: "1",
-        num_inference_steps: "30",
-        safety_checker: "no",
-        enhance_prompt: "yes",
-        seed: null,
-        guidance_scale: 7.5,
-        multi_lingual: "no",
-        panorama: "no",
-        self_attention: "no",
-        upscale: "no",
-        lora_model: null,
-        tomesd: "yes",
-        use_karras_sigmas: "yes",
-        vae: null,
-        lora_strength: null,
-        scheduler: "UniPCMultistepScheduler",
-        webhook: null,
-        track_id: null
-      });
+      result.innerHTML = '<p class="loading">Sedang memproses, mohon tunggu...</p>';
 
-      const requestOptions = {
-        method: "POST",
-        headers: headers,
-        body: body,
-        redirect: "follow"
-      };
-
-      fetch("https://modelslab.com/api/v6/images/text2img", requestOptions)
-        .then(response => response.json())
-        .then(result => {
-          if (result && result.output && result.output.length > 0) {
-            const imageUrl = result.output[0];
-            resultDiv.innerHTML = `<img src="${imageUrl}" alt="Generated Image">`;
-          } else {
-            resultDiv.innerHTML = "Gagal menghasilkan gambar.";
-          }
-        })
-        .catch(error => {
-          console.error("Error:", error);
-          resultDiv.innerHTML = "Terjadi kesalahan. Coba lagi.";
+      try {
+        const response = await fetch('https://api.deepai.org/api/text2img', {
+          method: 'POST',
+          headers: {
+            'Api-Key': '41624a1f-d629-46ba-bf83-c01a9b754334',
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `text=${encodeURIComponent(prompt)}`
         });
-    }
+
+        const data = await response.json();
+        if (data.output_url) {
+          result.innerHTML = `
+            <p>Prompt: <strong>${prompt}</strong></p>
+            <img src="${data.output_url}" alt="Gambar hasil AI" />
+          `;
+        } else {
+          result.innerHTML = `<p>Gagal membuat gambar. Coba lagi.</p>`;
+        }
+      } catch (error) {
+        console.error(error);
+        result.innerHTML = `<p>Terjadi kesalahan saat mengambil gambar.</p>`;
+      }
+    });
   </script>
 </body>
 </html>
